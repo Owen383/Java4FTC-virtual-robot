@@ -1,39 +1,78 @@
 package net.aspenk12.java4ftc.ps4;
 
-public class GridLogger {
-    private TestWriter writer;
 
-    public GridLogger(TestWriter writer) {
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class GridLogger {
+    private LogWriter writer;
+    private HashMap<String, String> rowData = new HashMap<>();
+    ArrayList<String> columnHeaders = new ArrayList<>();
+    long startTime = System.currentTimeMillis();
+
+    private boolean firstWrite = true;
+
+    public GridLogger(LogWriter writer) {
         this.writer = writer;
     }
 
-    /**
-     * Define grid column header names
-     * @param columns
-     */
     public void setColumnHeaders(String[] columns) {
+
+        for (String element : columns) {
+            if(!columnHeaders.contains(element)){
+                columnHeaders.add(element);
+            }
+        }
     }
 
-    /**
-     * Add a value to the logger under the specified column
-     *
-     * @param column
-     * @param value
-     */
     public void add(String column, double value) {
+        if(firstWrite){
+            if(!columnHeaders.contains(column)){
+                columnHeaders.add(column);
+            }
+        }
+        rowData.put(column, String.valueOf(value));
+
     }
 
-    /**
-     * Write a line of data to the log.  If this is the first call to writeRow, a row of comma-separated
-     * column names are written first.  A row of comma-separated data values that were added with the add()
-     * method is written next.  Once the data row is written, the logger is reset
-     * and calls to add() will add values to the next line of data.
-     */
     public void writeRow() {
-        writer.writeLine("something");
+        int i = 0;
+        StringBuilder rowString = new StringBuilder();
+        if(firstWrite) {
+            rowString.append("Time,");
+            for (String element : columnHeaders) {
+                i++;
+                rowString.append(element);
+                if (i < columnHeaders.size()) {
+                    rowString.append(",");
+                }
+            }
+            writer.writeLine(rowString.toString());
+            firstWrite = false;
+        }
+        i = 0;
+        rowString.delete(0,200);
+        String currentTime = String.valueOf(System.currentTimeMillis() - startTime);
+        for(String element : columnHeaders){
+            i++;
+            rowString.append(currentTime);
+            if(rowData.get(element) == null){
+                rowString.append("null");
+            }
+            else{
+                rowString.append(rowData.get(element));
+            }
+
+            if(i < columnHeaders.size()){
+                rowString.append(",");
+            }
+        }
+        writer.writeLine(rowString.toString());
+        rowData.clear();
     }
 
     public void stop() {
+        writer.stop();
     }
 
 }
